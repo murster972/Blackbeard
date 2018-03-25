@@ -14,10 +14,10 @@ import argparse
 #TODO: Add blackbeard ascii art
 
 ' An version of the linux util cp, allows users to copy files from multiple sources to destinations '
-class CopyFiles:
-    def __init__(self, source, dest, buff_size=20000):
+class Blackbeard:
+    def __init__(self, source, dest, buff_size):
         #size of byte chunks to copy to file each iteration
-        self.buff_size = buff_size
+        self.buff_size = buff_size if buff_size else 20000
 
         copied = 0
 
@@ -46,7 +46,7 @@ class CopyFiles:
             prog_bar_length = 25
 
             #TODO: move elapsed time to seperate thread so it doesn't get hung
-            #      when writing to file or flushing scren stc.
+            #      when writing to file or flushing scren etc.
             elapsed_time = 0
             remaining_data = s_size
 
@@ -56,11 +56,8 @@ class CopyFiles:
             while data:
                 start = time.time()
 
-                #BUG: SUddenly hanging when trying to write data to dest file?
                 data = s.read(self.buff_size)
                 d.write(data)
-
-                print("test1")
 
                 #gets cur-length of dest file
                 l = d.seek(0, 2)
@@ -76,18 +73,17 @@ class CopyFiles:
                 elapsed_time += time.time() - start
 
                 #converts time to minutes if more than 60s
-                e_time = "%.2fsecs" % elapsed_time
+                e_time = "%.2fs" % elapsed_time
 
                 if elapsed_time > 60:
                     mins = elapsed_time - (elapsed_time % 60)
                     secs = elapsed_time - mins
-                    e_time = "%dmin %.2fsecs" % (mins / 60, secs)
+                    e_time = "%dm %.2fs" % (mins / 60, secs)
 
                 #returns cursors to start of screen (\r), prints progress bar and info
                 #then clears screen
                 sys.stdout.write("\r[%s] %.2f%% - %.2fGB of %.2fGB - elapsed %s" % (bar, perct, l_gb, s_size_gb, e_time))
                 sys.stdout.flush()
-
             print("\n")
 
     ''' Prints error message and exits
@@ -197,7 +193,7 @@ def main():
     args = {arg[0]:arg[1] for arg in parser.parse_args()._get_kwargs()}
 
     if len(args["source"]) != len(args["dest"]):
-        CopyFiles._print_err("[-] ERROR: Must pass the same ammount of source and destination files.")
+        Blackbeard._print_err("[-] ERROR: Must pass the same ammount of source and destination files.")
 
     #files
     if not args["is_dir"]:
@@ -211,7 +207,7 @@ def main():
                 del args["source"][ind - 1]
                 del args["dest"][ind - 1]
 
-        CopyFiles(args["source"], args["dest"], args["buff_size"])
+        Blackbeard(args["source"], args["dest"], args["buff_size"])
     #dirs
     else:
         #checks dir exists, and gets files from it
@@ -235,8 +231,8 @@ def main():
             source, dest = get_dir_files(s, d, args["force"])
 
             print("[*] INFO: Copying Files from directory '%s' to '%s'" % (s, d))
-            CopyFiles(source, dest, args["buff_size"])
+            Blackbeard(source, dest, args["buff_size"])
 
 if __name__ == '__main__':
     main()
-    #CopyFiles(["test.mkv"], ["test_cp.mkv"])
+    #Blackbeard(["test.mkv"], ["test_cp.mkv"])
